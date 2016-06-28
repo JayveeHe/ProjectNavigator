@@ -36,12 +36,23 @@ def get_route_matrix(point_list):
     url = 'http://api.map.baidu.com/direction/v1/routematrix'
     start_list = []
     for i in point_list:
-        start_list.append('%s,%s' % (i['location']['gps']['lat'], i['location']['gps']['lng']))
+        start_list.append('%s,%s' % (i.location['gps']['lat'], i.location['gps']['lng']))
     places_str = '|'.join(start_list)
     params = {'origins': places_str, 'destinations': places_str, 'ak': ak, 'output': 'json'}
     res = requests.get(url, params=params).text
     json_res = json.loads(res)
-    return json_res
+    req_result = json_res['result']['elements']
+    item_count = len(point_list)
+    mat = {}
+    for x in xrange(item_count):
+        item = point_list[x]
+        targets = {}
+        for j in xrange(item_count):
+            target_item = point_list[j]
+            target = req_result[x * item_count + j]
+            targets[target_item.md5] = {'item': target_item, 'duration': target['duration']['value']}
+        mat[item.md5] = {'item': item, 'targets': targets}
+    return mat
 
 
 def get_direction(origin, destination):

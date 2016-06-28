@@ -14,7 +14,12 @@ __author__ = 'jayvee'
 
 @timer
 def structure_data():
+    """
+    将db中的数据进行结构化处理
+    :return:
+    """
     db_sp = get_db_inst('ProjectNavi', 'ScenicPoins')
+    # find_result = db_sp.find({"title": "中国地质博物馆"})
     find_result = db_sp.find()
     for item in find_result:
         title = item['title']
@@ -40,38 +45,43 @@ def structure_data():
 
 
 def analyze_open_time(str_open_time):
+    """
+    分析开放时间的文本，返回结构化数据
+    :param str_open_time:
+    :return:
+    """
     if str_open_time:
-        f_result = re.findall('\d{1,2}:\d{1,2}-\d{1,2}:\d{1,2}', str_open_time)
+        f_result = re.findall(u'\d{1,2}[:：]\d{1,2}[—~-]\d{1,2}[:：]\d{1,2}', str_open_time)
         if f_result:
             start = 0
             end = 2400
             for i in f_result:
-                sp = i.split('-')
-                tmp_start = int(sp[0].split(':')[0]) * 100
-                tmp_start += int(sp[0].split(':')[1])
+                sp = re.split(u'[—~-]+', i)
+                tmp_start = int(re.split(u'[:：]', sp[0])[0]) * 100
+                tmp_start += int(re.split(u'[:：]', sp[0])[1])
                 start = max(start, tmp_start)
-                tmp_end = int(sp[1].split(':')[0]) * 100
-                tmp_end += int(sp[1].split(':')[1])
+                tmp_end = int(re.split(u'[:：]', sp[1])[0]) * 100
+                tmp_end += int(re.split(u'[:：]', sp[1])[1])
                 end = min(end, tmp_end)
             return start, end
-        f_result = re.findall('\d{1,2}:\d{1,2}~\d{1,2}:\d{1,2}', str_open_time)
-        if f_result:
-            start = 0
-            end = 2400
-            for i in f_result:
-                sp = i.split('~')
-                tmp_start = int(sp[0].split(':')[0]) * 100
-                tmp_start += int(sp[0].split(':')[1])
-                start = max(start, tmp_start)
-                tmp_end = int(sp[1].split(':')[0]) * 100
-                tmp_end += int(sp[1].split(':')[1])
-                end = min(end, tmp_end)
-            return start, end
+        # f_result = re.findall('\d{1,2}:\d{1,2}~\d{1,2}:\d{1,2}', str_open_time)
+        # if f_result:
+        #     start = 0
+        #     end = 2400
+        #     for i in f_result:
+        #         sp = i.split('~')
+        #         tmp_start = int(sp[0].split(':')[0]) * 100
+        #         tmp_start += int(sp[0].split(':')[1])
+        #         start = max(start, tmp_start)
+        #         tmp_end = int(sp[1].split(':')[0]) * 100
+        #         tmp_end += int(sp[1].split(':')[1])
+        #         end = min(end, tmp_end)
+        #     return start, end
         if re.findall(u'全天', str_open_time):
-            return 600, 2300
-        return 600, 2400
+            return 800, 2300
+        return 800, 1800
     else:
-        return 600, 2400
+        return 800, 2400
 
 
 def analyze_visit_time(str_visit_time):
@@ -82,11 +92,11 @@ def analyze_visit_time(str_visit_time):
     """
     if str_visit_time:
         # 匹配分钟
-        if re.findall(u'(\d{0,3}[-~]?\d{0,3})分钟', str_visit_time):
-            f_result = re.findall(u'(\d{1,3}[-~]\d{1,3})分钟', str_visit_time)
+        if re.findall(u'(\d{0,3}[-~—]?\d{0,3})分钟', str_visit_time):
+            f_result = re.findall(u'(\d{1,3}[-~—]\d{1,3})分钟', str_visit_time)
             # 匹配到范围时间
             if f_result:
-                split = re.split('[-~]', f_result[0])
+                split = re.split('[-~—]', f_result[0])
                 visit_minute = (int(split[0]) + int(split[1])) / 2
                 return visit_minute
             # 匹配到具体时间
@@ -94,8 +104,8 @@ def analyze_visit_time(str_visit_time):
             if f_result:
                 return int(f_result[0])
         # 匹配小时
-        if re.findall(u'(\d{0,3}[-~]?\d{0,3})小时', str_visit_time):
-            f_result = re.findall(u'(\d{1,3}[-~]\d{1,3})小时', str_visit_time)
+        if re.findall(u'(\d{0,3}[-~—]?\d{0,3})小时', str_visit_time):
+            f_result = re.findall(u'(\d{1,3}[-~—]\d{1,3})小时', str_visit_time)
             # 匹配到范围时间
             if f_result:
                 split = re.split('[-~]', f_result[0])
